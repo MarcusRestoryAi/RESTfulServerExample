@@ -12,5 +12,12 @@
     "age":37,
     "favoriteColor":"Blue",
     "data":["a", "b", "c", "d", "e"]
+  },
+  "p3": {
+    "id": 3,
+    "name":"Emma",
+    "age":40,
+    "favoriteColor":"Gul",
+    "data":["a", "b", "c", "d", "e"]
   }
 }

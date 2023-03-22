@@ -42,12 +42,15 @@ public class Main {
             bWriter = new BufferedWriter(outputSW);
 
             while (true) {
-                //Hämta och skriv ut klientens meddelande
+                //Hämta klientens meddelande och skicka den till openUpData()
+                //Returnerar ett färdigt JSON objekt som skall tillbaka till klienten
                 String message = bReader.readLine();
-                System.out.println("Client: " + message);
+                String returnData = openUpData(message);
 
-                //Skicka acknoledgement svar tillbaka
-                bWriter.write("Message Received");
+                System.out.println("Message Recieved and sent back");
+
+                //Skicka acknoledgement eller svar tillbaka
+                bWriter.write(returnData);
                 bWriter.newLine();
                 bWriter.flush();
 
@@ -63,12 +66,15 @@ public class Main {
 
         } catch (IOException e) {
             System.out.println(e);
+        } catch (ParseException e) {
+            System.out.println(e);
         } finally {
             System.out.println("Server Avslutas");
         }
     }
 
     static String openUpData(String message) throws ParseException, IOException {
+        System.out.println(message);
         //Steg 1. Bygg upp JSON Obejct basserat på inkommande string
         JSONParser parser = new JSONParser();
         JSONObject jsonOb = (JSONObject) parser.parse(message);
@@ -82,23 +88,25 @@ public class Main {
 
         //Steg 3. Använd en SwitchCase för att kolla vilken data som skall användas
         switch (urls[0]) {
-            case "persons": {
-                if (method == "get") {
+            case "persons":
+                if (method.equals("get")) {
                     //VIll hämta data om personer
                     //TODO lägg till logik om det är specfik person som skall hämtas
 
+                    //Skapa JSONReturn objektet
+                    JSONObject jsonReturn = new JSONObject();
+
                     //Hämta data från JSON fil
-                    JSONObject jsonReturn = (JSONObject) parser.parse(new FileReader("data/data.json"));
+                    jsonReturn.put("data", parser.parse(new FileReader("data/data.json")).toString());
 
-                    //Returnera JSON String
+                    //Inkluderat HTTP status code
+                    jsonReturn.put("httpStatusCode", 200);
+
+                    //Return
                     return jsonReturn.toJSONString();
-
                 }
                 break;
-            }
         }
-
-
         return "message Recieved";
     }
 }
