@@ -7,7 +7,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Main {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         System.out.println("Server är nu Redo");
 
         //Init stuff
@@ -30,18 +30,19 @@ public class Main {
             return;
         }
 
-        try {
-            //Väntar på specifik socket efter trafik
-            socket = serverSocket.accept();
+        while (true) {
+            try {
+                //Väntar på specifik socket efter trafik
+                socket = serverSocket.accept();
 
-            //Initiera Reader och Writer och koppla dem till socket
-            inputSR = new InputStreamReader(socket.getInputStream());
-            outputSW = new OutputStreamWriter(socket.getOutputStream());
+                //Initiera Reader och Writer och koppla dem till socket
+                inputSR = new InputStreamReader(socket.getInputStream());
+                outputSW = new OutputStreamWriter(socket.getOutputStream());
 
-            bReader = new BufferedReader(inputSR);
-            bWriter = new BufferedWriter(outputSW);
+                bReader = new BufferedReader(inputSR);
+                bWriter = new BufferedWriter(outputSW);
 
-            while (true) {
+                //while (true) {
                 //Hämta klientens meddelande och skicka den till openUpData()
                 //Returnerar ett färdigt JSON objekt som skall tillbaka till klienten
                 String message = bReader.readLine();
@@ -55,25 +56,28 @@ public class Main {
                 bWriter.flush();
 
                 //Avsluta om QUIT
-                if (message.equalsIgnoreCase("quit")) break;
+                if ("QUIT".equals(returnData)) break;
+            } catch (ParseException e) {
+                throw new RuntimeException(e);
+            } catch (IOException e) {
+                System.out.println(e);
             }
-            //Stäng kopplingar
-            socket.close();
-            inputSR.close();
-            outputSW.close();
-            bReader.close();
-            bWriter.close();
-
-        } catch (IOException e) {
-            System.out.println(e);
-        } catch (ParseException e) {
-            System.out.println(e);
-        } finally {
-            System.out.println("Server Avslutas");
         }
+        //Stäng kopplingar
+        socket.close();
+        inputSR.close();
+        outputSW.close();
+        bReader.close();
+        bWriter.close();
+
+        System.out.println("Server Avslutas");
+
     }
 
     static String openUpData(String message) throws ParseException, IOException {
+        //Kolla om server har fått request att stänga ner
+        if ("QUIT".equals(message)) return "QUIT";
+
         System.out.println(message);
         //Steg 1. Bygg upp JSON Obejct basserat på inkommande string
         JSONParser parser = new JSONParser();
@@ -98,6 +102,21 @@ public class Main {
 
                     //Hämta data från JSON fil
                     jsonReturn.put("data", parser.parse(new FileReader("data/data.json")).toString());
+
+                    //Inkluderat HTTP status code
+                    jsonReturn.put("httpStatusCode", 200);
+
+                    //Return
+                    return jsonReturn.toJSONString();
+                }
+                break;
+            case "test":
+                if (method.equals("get")) {
+                    //Skapa JSONReturn objektet
+                    JSONObject jsonReturn = new JSONObject();
+
+                    //Hämta data från JSON fil
+                    jsonReturn.put("data", parser.parse(new FileReader("data/test.json")).toString());
 
                     //Inkluderat HTTP status code
                     jsonReturn.put("httpStatusCode", 200);
